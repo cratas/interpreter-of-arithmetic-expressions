@@ -1,18 +1,11 @@
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
 
 public class MainClass {
 
 	private static final String[] OPERATORS = new String[4];
-	
-	
 	static {
 		OPERATORS[0] = "+";		
 		OPERATORS[1] = "-";		
@@ -128,7 +121,7 @@ public class MainClass {
 		for(int i = 0; i < tokens.length; i++ ) {
 
 			//check format of expression, there cannot be 2 operators successive
-			if(i > 0 && isOperator(tokens[i - 1])) {
+			if(i > 0 && isOperator(tokens[i - 1]) && isOperator(tokens[i])) {
 				return -1;
 			}
 			
