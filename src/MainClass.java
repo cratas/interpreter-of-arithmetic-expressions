@@ -1,18 +1,23 @@
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
 
 public class MainClass {
 
-	private static final Map<String, Integer>OPERATORS = new HashMap<String, Integer>();
+	private static final String[] OPERATORS = new String[4];
+	
 	
 	static {
-		OPERATORS.put("+", 1);		
-		OPERATORS.put("-", 1);
-		OPERATORS.put("*", 2);
-		OPERATORS.put("/", 2);
+		OPERATORS[0] = "+";		
+		OPERATORS[1] = "-";		
+		OPERATORS[2] = "*";		
+		OPERATORS[3] = "/";		
 	}
 	
 	public static void main(String[] args) {
@@ -63,12 +68,44 @@ public class MainClass {
 		return brackets.size() == 0 ? true : false;
 	}
 	
-	public static boolean isNumber(String token) {
-		return token.matches("\\d+");
+	private static boolean isNumber(char token) {
+		return (token >= '0' && token <= '9') ? true : false;
 	}
 	
-	public static boolean isOperator(String token) {
-		return OPERATORS.containsKey(token);
+	private static boolean isNumber(String exp) {
+		return exp.matches("\\d+");
+	}
+	
+	private static boolean isOperator(char token) {
+		return Arrays.asList(OPERATORS).contains(Character.toString(token));
+	}
+	
+	public static boolean hasPrecedence(char op1, char op2)
+	{
+		if (op2 == '(' || op2 == ')')
+			return false;
+		if ((op1 == '*' || op1 == '/') && (op2 == '+' || op2 == '-'))
+			return false;
+		else
+			return true;
+	}
+	
+    public static int calculate(char operator, int b, int a)
+	{
+		switch (operator)
+		{
+			case '+':
+				return a + b;
+			case '-':
+				return a - b;
+			case '*':
+				return a * b;
+			case '/':
+				if (b == 0) 
+					throw new UnsupportedOperationException("You can not divide by zero ..");
+				return a / b;
+		}
+		return 0;
 	}
 	
 	private static int handleExpression(String exp) {
@@ -80,26 +117,56 @@ public class MainClass {
 		if(isNumber(exp))
 				return Integer.parseInt(exp);
 		
-		Stack<Integer> numbers = new Stack<Integer>();
 		
-		for(int i = 0; i < exp.length(); i++) {
-			String token = Character.toString(exp.charAt(i));	//want to work with string rather than character
-			
-			if(isOperator(token)) {
+		char[] tokens = exp.replaceAll(" ", "").toCharArray();
+		
+		Stack<Integer> numbers = new Stack<Integer>();
+		Stack<Character> operators = new Stack<Character>();
+		
+		
+		
+		for(int i = 0; i < tokens.length; i++ ) {
 
+			//check format of expression, there cannot be 2 operators successive
+			if(i > 0 && isOperator(tokens[i - 1])) {
+				return -1;
 			}
 			
-			if(isNumber(token)) {
-				numbers.push(Integer.parseInt(token));
-			}
-			
-			if(token.equals("(")) {
+			//if token is number or numbers sequence, add it into numbers stack
+			if(isNumber(tokens[i])) {
+				StringBuffer sBuffer = new StringBuffer();
 				
+				//handle more numbers than 1
+				while(i < tokens.length && isNumber(tokens[i]))
+					sBuffer.append(tokens[i++]);
+								
+				numbers.push(Integer.parseInt(sBuffer.toString()));
+				i--;
+			} 
+			else if(tokens[i] == '(') {
+				operators.push(tokens[i]);
+			} 
+			else if(tokens[i] == ')') {
+				while(operators.peek() != '(') {
+					numbers.push(calculate(operators.pop(), numbers.pop(), numbers.pop()));
+				}
+				
+				operators.pop();
+			} 
+			else if(isOperator(tokens[i])) {
+				while(!operators.empty() && hasPrecedence(tokens[i], operators.peek())) {
+					numbers.push(calculate(operators.pop(), numbers.pop(), numbers.pop()));	
+				}
+				operators.push(tokens[i]);
 			}
 		}
+
 		
+		while(!operators.empty()) {
+			numbers.push(calculate(operators.pop(), numbers.pop(), numbers.pop()));
+		}
 		
-		return 1000;
+		return numbers.pop();
 	}
 }
 
